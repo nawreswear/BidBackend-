@@ -31,9 +31,10 @@ public class CategorieServiceImp implements CategorieService {
         Object existingCategorieOptional = categorieRepository.findById(id);
         if (((Optional<Categorie>) existingCategorieOptional).isPresent()) {
             Categorie existingCategorie = ((Optional<Categorie>) existingCategorieOptional).get();
-            existingCategorie.setNom(cat.getNom());
+            existingCategorie.setTitre(cat.getTitre());
             existingCategorie.setDescription(cat.getDescription());
             existingCategorie.setArticles(cat.getArticles());
+            existingCategorie.setImage(cat.getImage());
             return categorieRepository.save(existingCategorie);
         } else {
             return null;
@@ -43,9 +44,9 @@ public class CategorieServiceImp implements CategorieService {
    public Categorie getcategorieById(long id) {
         return categorieRepository.getCategorieById(id);
     }
-    public Categorie findByNom(String nom) {
+    public Categorie findByTitre(String titre) {
 
-        return categorieRepository.findByNom(nom);
+        return categorieRepository.findByTitre( titre);
     }
     public List<Categorie> getallcategoriess() {
 

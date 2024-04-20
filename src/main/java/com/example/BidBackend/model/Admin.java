@@ -1,27 +1,38 @@
 package com.example.BidBackend.model;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.OneToMany;
-import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import lombok.*;
 
+import javax.persistence.*;
+import javax.validation.constraints.*;
+import java.util.ArrayList;
 import java.util.List;
-
 
 @Getter
 @Setter
 @Entity
-@NoArgsConstructor
 @AllArgsConstructor
 public class Admin extends User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @Size(max = 20)
-    private String type ;
 
-    @OneToMany(mappedBy = "Admin", cascade = CascadeType.ALL)
+    @JsonIgnore
+    @OneToMany(mappedBy = "admin", cascade = CascadeType.ALL)
     private List<Enchere> encheres;
+
+    @Getter
+    @Setter
+    @JsonIgnore
+    @JsonManagedReference
+    @OneToMany(mappedBy = "admin", fetch = FetchType.LAZY)
+    private List<DemandeVendeur> demandes;
+
+    public Admin() {
+        this.encheres = new ArrayList<>();;
+        this.demandes = new ArrayList<>();;
+    }
 }

@@ -1,17 +1,19 @@
 package com.example.BidBackend.service;
 
 import com.example.BidBackend.model.Article;
-import com.example.BidBackend.model.Categorie;
 
-import org.springframework.stereotype.Service;
 import java.util.List;
-@Service
+import java.util.Optional;
+
 public interface ArticleService {
-    Article findById(long id);
-    Article save(Article article);
-    Article updateArticle(long id, Article article);
-    void deleteArticle(long id);
+    Optional<Article> getArticleById(Long id);
+    Article createArticle(Article article);
+    Article updateArticle(Long id, Article newArticle);
+    void deleteArticle(Long id);
     List<Article> getAllArticles();
-    List<Article> getAvailableArticles();
-   // List<Article> getArticlesByCategory(Categorie categorie);
+    void addPrixVenteForArticle(Long articleId, double prixvente, Article newArticle);
+    //  List<Article> getAvailableArticles();
+    Article createArticlee(Article article, Long vendeurId) ;
+    List<Article> getArticlesByCategoryId(Long categoryId);
+    List<Article> getArticlesByEnchereId(Long enchereId);
 }

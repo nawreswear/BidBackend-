@@ -1,26 +1,22 @@
 package com.example.BidBackend.model;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.fasterxml.jackson.annotation.*;
+import lombok.*;
 
+import javax.persistence.*;
+import javax.validation.constraints.*;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Data
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler","demandes"})
 @Inheritance(strategy = InheritanceType.JOINED)
-public  class User {
+public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
-    @Getter
     @Size(max = 20)
     private String type;
 
@@ -60,8 +56,18 @@ public  class User {
     private double longitude;
     private double latitude;
 
+    private String photo;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "parten_id")
+    private Part_En parten ;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<Enchere> encheres;
+    @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<DemandeVendeur> demandes;
+    public User() {
+    }
+    public User(int id) {
+        this.id = (long) id;
+    }
+
 }

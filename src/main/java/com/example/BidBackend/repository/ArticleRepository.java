@@ -3,6 +3,7 @@ import com.example.BidBackend.model.Article;
 import com.example.BidBackend.model.Categorie;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -12,7 +13,9 @@ public interface ArticleRepository extends JpaRepository<Article,Long> {
 	List<Article> findByCategorie(Categorie categorie);
 	List<Article> findByStatut(String statut);
     Optional<Article> findById(Long id);
-  
+	List<Article> findByCategorie_Id(Long categoryId);
+
+	List<Article> findByEnchereId(Long enchereId);
 }
 
 

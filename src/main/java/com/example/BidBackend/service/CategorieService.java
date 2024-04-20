@@ -10,6 +10,6 @@ public interface CategorieService {
       String deleteCategorie(long id);
       Categorie getcategorieById(long id);
      Categorie updateCategorie(Categorie cat, long id);
-     Categorie findByNom(String nom);
+     Categorie findByTitre(String titre);
      List<Categorie> getallcategoriess();
 }

@@ -7,7 +7,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/vendeur")
-//@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "http://localhost:4200")
 public class VendeurControlleur {
 
 
@@ -36,8 +36,8 @@ public class VendeurControlleur {
         return vendeurserv.getAllVendeurs();
     }
 
-    @GetMapping("/enchere/{enchereId}/vendeurs")
+  /*  @GetMapping("/enchere/{enchereId}/vendeurs")
     public List<Vendeur> getAllVendeursForEnchere(@PathVariable Long enchereId) {
         return vendeurserv.getAllVendeursForEnchere(enchereId);
-    }
+    }*/
 }

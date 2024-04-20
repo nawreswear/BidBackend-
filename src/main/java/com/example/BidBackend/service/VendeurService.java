@@ -2,6 +2,7 @@ package com.example.BidBackend.service;
 
 import java.util.List;
 
+import com.example.BidBackend.model.User;
 import com.example.BidBackend.model.Vendeur;
 
 public interface VendeurService {
@@ -9,5 +10,5 @@ public interface VendeurService {
     String deleteVendeur(long id) ;
     List<Vendeur> getAllVendeurs();
     Vendeur updateVendeur(Long id,Vendeur v);
-    List<Vendeur> getAllVendeursForEnchere(Long enchereId);
+    Vendeur findById (long id);
 }

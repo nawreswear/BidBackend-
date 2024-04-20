@@ -2,30 +2,97 @@ package com.example.BidBackend.controller;
 
 import java.util.Date;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import java.util.Optional;
 
-import com.example.BidBackend.model.Enchere;
-import com.example.BidBackend.service.EnchereService;
+import com.example.BidBackend.model.*;
+import com.example.BidBackend.service.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/")
-@CrossOrigin(origins = "http://localhost:3000")
+@RequestMapping("/enchere")
+@CrossOrigin(origins = "http://localhost:4200")
 public class EnchereControlleur {
 	@Autowired
 	EnchereService enchereService;
-	
-	
-	@PostMapping(value="/addenchere")
-	public Enchere addenchere(@RequestBody Enchere c){
-		return enchereService.save(c);
+	@Autowired
+	UserDetailsServiceImpl userService;
+	@Autowired
+	AdminService adminService;
+	@Autowired
+	ArticleService articleService;
+	@Autowired
+	Part_EnService partEnService;
+
+	@GetMapping("/{enchereId}/articles")
+	public ResponseEntity<List<Article>> getArticlesForEnchere(@PathVariable Long enchereId) {
+		List<Article> articles = articleService.getArticlesByEnchereId(enchereId);
+		return new ResponseEntity<>(articles, HttpStatus.OK);
 	}
+	@PostMapping("/{userId}/participate/{enchereId}")
+	public ResponseEntity<Object> participateInEnchere(@PathVariable("userId") Long userId, @PathVariable("enchereId") Long enchereId) {
+		// Récupérer l'utilisateur depuis la base de données
+		User utilisateur = userService.findById(userId);
+		if (utilisateur == null) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Utilisateur non trouvé");
+		}
+
+		// Récupérer l'enchère depuis la base de données
+		Optional<Enchere> enchereOptional = enchereService.getEnchereById(enchereId);
+		if (!enchereOptional.isPresent()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Enchère non trouvée");
+		}
+		Enchere enchere = enchereOptional.get();
+
+		// Vérifier si l'utilisateur participe déjà à cette enchère
+		Part_En partEn = utilisateur.getParten();
+		if (partEn != null && partEn.getEncheres().contains(enchere)) {
+			return ResponseEntity.status(HttpStatus.CONFLICT).body("L'utilisateur participe déjà à cette enchère");
+		}
+
+		// Appeler le service de participation
+		String result = enchereService.participerEnchere(userId, enchereId);
+		return ResponseEntity.ok(result);
+	}
+
+	@GetMapping("/api/{nomuser}")
+	public ResponseEntity<Object> findUserIdByNom(@PathVariable String nomuser) {
+		try {
+			Long userId = userService.findUserIdByNom(nomuser);
+			return ResponseEntity.ok(userId);
+		} catch (UsernameNotFoundException e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Utilisateur non trouvé avec le nom : " + nomuser);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Une erreur s'est produite lors de la recherche de l'utilisateur.");
+		}
+	}
+	@PostMapping("/addenchere")
+	public ResponseEntity<Object> addEnchere(@RequestBody Enchere request) {
+		if (request.getParten() == null || request.getAdmin() == null) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("L'enchère doit contenir un utilisateur et un administrateur valides.");
+		}
+		// Récupérez la liste d'articles directement à partir de la requête
+		List<Article> existingArticles = request.getArticles();
+		// Récupérez l'utilisateur et l'administrateur à partir de la requête
+		Part_En partEn = request.getParten();
+		Admin admin = request.getAdmin();
+		// Créez une nouvelle enchère à partir de la requête
+		Enchere enchere = new Enchere();
+		enchere.setDateDebut(request.getDateDebut());
+		enchere.setDateFin(request.getDateFin());
+		enchere.setArticles(existingArticles);
+		enchere.setAdmin(admin);
+		enchere.setParten(partEn);
+		// Enregistrez l'enchère
+		Enchere savedEnchere = enchereService.save(enchere);
+		return ResponseEntity.ok(savedEnchere);
+	}
+
 	@PostMapping(value="/UpdateEnchere/{iden}")
 	public Enchere UpdateEnchere(@PathVariable long iden,@RequestBody Enchere c) 
 	{
@@ -36,17 +103,23 @@ public class EnchereControlleur {
 	{
 		return enchereService.deleteEnchere(iden);
 	}
+	@GetMapping(value="/getallEncheress")
+	public List<Enchere> getallEncheress() {
+		return enchereService.getAllEncheres();
+
+	}
+
 	@GetMapping(value="/getallEncheres")
 	public List<Enchere> getallEncheres() {
 		return enchereService.getAllEncheres();
 	}
 	 @GetMapping("/{id}")
-	 public Enchere getEnchereById(@PathVariable Long id) {
+	 public Optional<Enchere> getEnchereById(@PathVariable Long id) {
 	        return enchereService.getEnchereById(id);
 	    }
-	
 
-	    @GetMapping("/article/{articleId}")
+
+		@GetMapping("/article/{articleId}")
 	    public List<Enchere> getEncheresByArticleId(@PathVariable Long articleId) {
 	        return enchereService.getEncheresByArticleId(articleId);
 	    }

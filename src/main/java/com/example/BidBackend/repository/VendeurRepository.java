@@ -9,5 +9,5 @@ import com.example.BidBackend.model.Vendeur;
 
 @Repository
 public interface VendeurRepository extends JpaRepository<Vendeur,Long>{
-	 List<Vendeur> findByEncheresId(Long enchereId);
+	// List<Vendeur> findByEncheresId(Long enchereId);
 }

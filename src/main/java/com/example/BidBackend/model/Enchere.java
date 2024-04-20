@@ -1,47 +1,41 @@
 package com.example.BidBackend.model;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Getter;
+import lombok.Setter;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import lombok.*;
-
+import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 @Entity
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Enchere {
     @Id
-    @GeneratedValue(
-            strategy = GenerationType.IDENTITY
-
-    )
-    private long id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     private Date dateFin;
     private Date dateDebut;
 
-    @OneToMany(mappedBy = "enchere", cascade = CascadeType.ALL)
-    private List<Article> articles;
+    @JsonIgnore
+    @OneToMany(mappedBy = "enchere", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<Article> articles = new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parten_id")
+    private Part_En parten;
 
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
-
-
-    @ManyToOne
-    @JoinColumn(name = "Admin_id")
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "admin_id")
     private Admin admin;
 
+    public Enchere() {
+    }
 }

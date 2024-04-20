@@ -1,6 +1,8 @@
 package com.example.BidBackend.service;
 import java.util.List;
 import java.util.Optional;
+
+import com.example.BidBackend.model.Enchere;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,16 +33,16 @@ public class VendeurServiceImp implements VendeurService {
 	        Optional<Vendeur> existingVendeurOptional = vr.findById(id);
 	        if (existingVendeurOptional.isPresent()) {
 	            Vendeur existingVendeur = existingVendeurOptional.get();
-	            existingVendeur.setMarque(v.getMarque());
-	            existingVendeur.setNomsociete(v.getNomsociete());
-	            existingVendeur.setEncheres(v.getEncheres()); 
+	            existingVendeur.setArticles(v.getArticles());
 	            return vr.save(existingVendeur);
 	        } else {
 	            return null;
 	        }
 	    }
-	 public List<Vendeur> getAllVendeursForEnchere(Long enchereId) {
 
-		return vr.findByEncheresId(enchereId);
-		}
+	public Vendeur findById(long id) {
+
+		Optional<Vendeur> optionalVendeur = vr.findById(id);
+		return optionalVendeur.orElse(null);
+	}
 }
