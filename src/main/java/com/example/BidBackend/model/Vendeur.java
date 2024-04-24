@@ -33,5 +33,8 @@ public class Vendeur extends User {
         this.articles = new ArrayList<>();
     }
 
+    public Vendeur(int id) {
+        super(id);
 
+    }
 }

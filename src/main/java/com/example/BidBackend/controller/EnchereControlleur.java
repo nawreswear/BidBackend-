@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.example.BidBackend.model.*;
+import com.example.BidBackend.repository.EnchereRepository;
 import com.example.BidBackend.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,12 +13,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
+import javax.transaction.Transactional;
+
 @RestController
 @RequestMapping("/enchere")
 @CrossOrigin(origins = "http://localhost:4200")
 public class EnchereControlleur {
 	@Autowired
 	EnchereService enchereService;
+	@Autowired
+	EnchereRepository enchererepository;
 	@Autowired
 	UserDetailsServiceImpl userService;
 	@Autowired
@@ -39,14 +44,12 @@ public class EnchereControlleur {
 		if (utilisateur == null) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Utilisateur non trouvé");
 		}
-
 		// Récupérer l'enchère depuis la base de données
 		Optional<Enchere> enchereOptional = enchereService.getEnchereById(enchereId);
 		if (!enchereOptional.isPresent()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Enchère non trouvée");
 		}
 		Enchere enchere = enchereOptional.get();
-
 		// Vérifier si l'utilisateur participe déjà à cette enchère
 		Part_En partEn = utilisateur.getParten();
 		if (partEn != null && partEn.getEncheres().contains(enchere)) {
@@ -57,6 +60,7 @@ public class EnchereControlleur {
 		String result = enchereService.participerEnchere(userId, enchereId);
 		return ResponseEntity.ok(result);
 	}
+
 
 	@GetMapping("/api/{nomuser}")
 	public ResponseEntity<Object> findUserIdByNom(@PathVariable String nomuser) {
@@ -92,16 +96,45 @@ public class EnchereControlleur {
 		Enchere savedEnchere = enchereService.save(enchere);
 		return ResponseEntity.ok(savedEnchere);
 	}
+	@PostMapping("/UpdateEnchere/{id}")
+	@Transactional
+	public ResponseEntity<Enchere> updateEnchere(@PathVariable Long id, @RequestBody Enchere updatedEnchere) {
+		// Vérifiez si l'ID de l'enchère à mettre à jour est valide
+		if (id == null || id <= 0) {
+			return ResponseEntity.badRequest().build();
+		}
 
-	@PostMapping(value="/UpdateEnchere/{iden}")
-	public Enchere UpdateEnchere(@PathVariable long iden,@RequestBody Enchere c) 
-	{
-		return enchereService.updateEnchere(iden,c);
+		// Vérifiez si les données de l'enchère à mettre à jour sont valides
+		if (updatedEnchere == null || updatedEnchere.getDateDebut() == null || updatedEnchere.getDateFin() == null
+				|| updatedEnchere.getParten() == null || updatedEnchere.getAdmin() == null) {
+			return ResponseEntity.badRequest().build();
+		}
+
+		// Récupérez l'enchère à mettre à jour depuis la base de données
+		Enchere existingEnchere = enchererepository.findByIdWithParten(id).orElse(null);
+		if (existingEnchere == null) {
+			return ResponseEntity.notFound().build();
+		}
+
+		// Charger les associations paresseuses nécessaires
+		existingEnchere.getParten().getUsers().size();
+		// Vous pouvez également charger d'autres associations si nécessaire
+
+		// Mettez à jour les champs de l'enchère existante avec les nouvelles données
+		existingEnchere.setDateDebut(updatedEnchere.getDateDebut());
+		existingEnchere.setDateFin(updatedEnchere.getDateFin());
+		existingEnchere.setParten(updatedEnchere.getParten());
+		existingEnchere.setAdmin(updatedEnchere.getAdmin());
+		// Assurez-vous de mettre à jour d'autres champs si nécessaire
+		// Enregistrez les modifications dans la base de données
+		Enchere updatedEncheree = enchererepository.save(existingEnchere);
+
+		return ResponseEntity.ok(updatedEncheree);
 	}
-	@DeleteMapping(value="/deleteEnchere/{iden}")
-	public String deleteEnchere(@PathVariable long iden) 
+	@DeleteMapping("/deleteEnchere/{id}")
+	public Void deleteEnchere(@PathVariable long id)
 	{
-		return enchereService.deleteEnchere(iden);
+		return enchereService.deleteEnchere(id);
 	}
 	@GetMapping(value="/getallEncheress")
 	public List<Enchere> getallEncheress() {

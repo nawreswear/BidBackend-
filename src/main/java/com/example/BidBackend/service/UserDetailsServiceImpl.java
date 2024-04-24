@@ -16,6 +16,14 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Autowired
     private UserRepository userRepository;
+    public Long getPartenIdByUserId(Long userId) {
+        User user = userRepository.findById(userId).orElse(null);
+        if (user != null && user.getParten() != null) {
+            return user.getParten().getId();
+        } else {
+            return null; // Ou renvoyer une valeur par défaut selon votre cas
+        }
+    }
     public User save(User user) {
         return userRepository.save(user);
     }

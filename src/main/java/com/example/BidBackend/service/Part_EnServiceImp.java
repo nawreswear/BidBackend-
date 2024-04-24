@@ -2,12 +2,14 @@ package com.example.BidBackend.service;
 
 import com.example.BidBackend.model.Enchere;
 import com.example.BidBackend.model.Part_En;
+import com.example.BidBackend.repository.EnchereRepository;
 import com.example.BidBackend.repository.Part_EnRepository;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.stereotype.Service;
 
+import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
@@ -16,6 +18,8 @@ import java.util.Optional;
 public class Part_EnServiceImp implements Part_EnService {
     @Autowired
     private Part_EnRepository partEnRepository;
+    @Autowired
+    private EnchereRepository enchereRepository;
 
     @Override
     public Part_En savePartEn(Part_En partEn) {
@@ -35,6 +39,17 @@ public class Part_EnServiceImp implements Part_EnService {
     public Part_En getPart_EnWithAssociations(Long id) {
         return partEnRepository.findPart_EnWithAssociations(id);
     }*/
+ @Override
+ public Long getPartenIdByEnchere(Long enchereId) {
+     // Recherchez l'enchère par ID
+     Enchere enchere = enchereRepository.findById(enchereId)
+             .orElseThrow(() -> new EntityNotFoundException("Enchère non trouvée"));
+
+     // Récupérez l'ID du Part_En associé à l'enchère
+     Long partenId = enchere.getParten().getId();
+
+     return partenId;
+ }
     @Override
     @Transactional
     public Part_En getPart_EnWithAssociations(Long id) {

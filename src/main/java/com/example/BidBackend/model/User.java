@@ -10,6 +10,7 @@ import java.util.List;
 
 @Entity
 @Data
+@AllArgsConstructor
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler","demandes"})
 @Inheritance(strategy = InheritanceType.JOINED)
 public class User {
@@ -58,7 +59,7 @@ public class User {
 
     private String photo;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "parten_id")
     private Part_En parten ;
 

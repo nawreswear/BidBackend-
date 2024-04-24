@@ -8,7 +8,7 @@ import java.util.Date;
 
 @Entity
 @Data
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor//(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Table(name = "demande_vendeur")
 public class DemandeVendeur {
@@ -29,4 +29,7 @@ public class DemandeVendeur {
     @JoinColumn(name = "user_id")
     private User user;
 
+    public void setUser(User user) {
+        this.user = user;
+    }
 }

@@ -2,16 +2,16 @@ package com.example.BidBackend.service;
 
 import java.util.*;
 
-import com.example.BidBackend.model.Part_En;
-import com.example.BidBackend.model.User;
-import com.example.BidBackend.repository.AdminRepository;
-import com.example.BidBackend.repository.Part_EnRepository;
-import com.example.BidBackend.repository.UserRepository;
+import com.example.BidBackend.model.*;
+import com.example.BidBackend.repository.*;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.example.BidBackend.model.Enchere;
-import com.example.BidBackend.repository.EnchereRepository;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityNotFoundException;
+import javax.transaction.Transactional;
 
 @Service
 public class EnchereServiceImp implements EnchereService {
@@ -23,8 +23,25 @@ public class EnchereServiceImp implements EnchereService {
 	@Autowired
 	private UserRepository userRepository;
 	@Autowired
+	private ArticleRepository articleRepository;
+	@Autowired
+	private Part_EnRepository partEnRepository;
+
+	@Autowired
 	private Part_EnRepository participationEnchereRepository;
 	@Override
+	public Long getPartenIdByEnchere(Long enchereId) {
+		// Recherchez l'enchère par ID
+		Enchere enchere = enchereRepository.findById(enchereId)
+				.orElseThrow(() -> new EntityNotFoundException("Enchère non trouvée"));
+
+		// Récupérez l'ID du Part_En associé à l'enchère
+		Long partenId = enchere.getParten().getId();
+
+		return partenId;
+	}
+	@Override
+	@Transactional
 	public String participerEnchere(Long userId, Long enchereId) {
 		// Récupérer l'utilisateur existant depuis la base de données
 		User utilisateur = userRepository.findById(userId).orElse(null);
@@ -57,23 +74,41 @@ public class EnchereServiceImp implements EnchereService {
 
 		return "Utilisateur participé avec succès à l'enchère spécifique";
 	}
+
+
 	@Override
 	public Enchere save(Enchere enchere) {
 		return enchereRepository.save(enchere);
 	}
+
 	@Override
-	public String deleteEnchere(long id) {
-		// Suppression de l'enchère par ID
-		enchereRepository.deleteById(id);
-		return "Enchere deleted successfully!";
+	public Void deleteEnchere(Long id) {
+		Enchere enchere = enchereRepository.findById(id)
+				.orElseThrow(() -> new EntityNotFoundException("Enchere not found with id: " + id));
+
+		// Dissocier les articles associés
+		for (Article article : enchere.getArticles()) {
+			article.setEnchere(null); // Mettre à jour l'ID de l'enchère dans chaque article à null
+		}
+
+		// Enregistrer les modifications des articles
+		for (Article article : enchere.getArticles()) {
+			articleRepository.save(article);
+		}
+
+		enchereRepository.delete(enchere); // Supprimer l'enchère
+		return null;
 	}
 
 	@Override
+	@Transactional
 	public List<Enchere> getAllEncheres() {
-		// Récupération de toutes les enchères
-		return enchereRepository.findAll();
+		List<Enchere> encheres = enchereRepository.findAllWithParten(); // Assurez-vous que cette méthode charge également les partenaires avec leurs utilisateurs
+		for (Enchere enchere : encheres) {
+			enchere.getParten().getUsers().size(); // Charger explicitement les utilisateurs associés à chaque partenaire
+		}
+		return encheres;
 	}
-
 	@Override
 	public List<Enchere> getAllEncheresWithArticles() {
 		List<Enchere> enchereList = enchereRepository.findAll();
@@ -85,20 +120,30 @@ public class EnchereServiceImp implements EnchereService {
 		return enchereList;
 	}
 	@Override
-	public Enchere updateEnchere(Long id, Enchere newEnchere) {
-		// Mise à jour de l'enchère
-		Optional<Enchere> optionalExistingEnchere = enchereRepository.findById(id);
-		if (optionalExistingEnchere.isPresent()) {
-			Enchere existingEnchere = optionalExistingEnchere.get();
-			existingEnchere.setDateDebut(newEnchere.getDateDebut());
-			existingEnchere.setDateFin(newEnchere.getDateFin());
-			existingEnchere.setArticles(newEnchere.getArticles());
-			existingEnchere.setParten(newEnchere.getParten());
-			existingEnchere.setAdmin(newEnchere.getAdmin());
-			return enchereRepository.save(existingEnchere);
-		} else {
-			return null;
-		}
+	@Transactional
+	public Enchere updateEnchere(Long id, Long adminId, Date dateDebut, Date dateFin, Long partenId) {
+		// Récupérer l'enchère existante depuis la base de données avec ses associations
+		Enchere existingEnchere = enchereRepository.findByIdWithAssociations(id)
+				.orElseThrow(() -> new EntityNotFoundException("Enchere not found with id: " + id));
+
+		// Charger explicitement les données de Part_En avec les utilisateurs en utilisant l'initialisation préalable (eager loading)
+		Part_En parten = partEnRepository.findById(partenId)
+				.orElseThrow(() -> new EntityNotFoundException("Parten not found with id: " + partenId));
+
+		// Charger explicitement les données de Admin
+		Admin admin = adminRepository.findById(adminId)
+				.orElseThrow(() -> new EntityNotFoundException("Admin not found with id: " + adminId));
+
+		// Mettre à jour les champs de l'enchère
+		existingEnchere.setAdmin(admin);
+		existingEnchere.setDateDebut(dateDebut);
+		existingEnchere.setDateFin(dateFin);
+		existingEnchere.setParten(parten);
+
+		// Enregistrer les modifications dans la base de données
+		Enchere updatedEnchere = enchereRepository.save(existingEnchere);
+
+		return updatedEnchere;
 	}
 
 	@Override

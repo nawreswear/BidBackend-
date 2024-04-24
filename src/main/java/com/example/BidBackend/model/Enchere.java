@@ -24,13 +24,13 @@ public class Enchere {
     private Date dateDebut;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "enchere", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "enchere", cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
     private List<Article> articles = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parten_id")
+    @JsonIgnoreProperties
     private Part_En parten;
-
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "admin_id")

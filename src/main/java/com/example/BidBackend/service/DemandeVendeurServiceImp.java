@@ -1,14 +1,18 @@
 package com.example.BidBackend.service;
 
 import com.example.BidBackend.model.DemandeVendeur;
+import com.example.BidBackend.model.Part_En;
 import com.example.BidBackend.model.User;
 import com.example.BidBackend.repository.DemandeVendeurRepository;
 import com.example.BidBackend.repository.UserRepository;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityNotFoundException;
+import javax.transaction.Transactional;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,11 +42,20 @@ public class DemandeVendeurServiceImp implements DemandeVendeurService{
             throw new IllegalArgumentException("Utilisateur non trouvé avec l'ID : " + userId);
         }
     }
-    // Méthode pour récupérer toutes les demandes vendeurs
+    @Override
+    @Transactional
     public List<DemandeVendeur> getAllDemandeVendeurs() {
-        return demandeVendeurRepository.findAll();
+        List<DemandeVendeur> demandeVendeurs = demandeVendeurRepository.findAll();
+        demandeVendeurs.forEach(demandeVendeur -> {
+            Part_En parten = demandeVendeur.getUser().getParten();
+            if (parten != null) {
+                // Forcer l'initialisation des utilisateurs
+                parten.getUsers().size(); // Accéder à la taille pour initialiser la collection
+            }
+        });
+        return demandeVendeurs;
     }
-   /* @Override
+    /* @Override
     // Méthode pour récupérer une demande vendeur par son ID
     public Optional<DemandeVendeur> getDemandeVendeurById(Long id) {
         Optional<DemandeVendeur> demandeVendeurOptional = demandeVendeurRepository.findById(id);

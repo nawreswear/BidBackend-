@@ -38,7 +38,7 @@ public class Article {
     @JoinColumn(name = "vendeur_id", nullable = true)
     private Vendeur vendeur;
 
-    public Article( String titre, String photo, String description, long quantiter, double prix, boolean livrable, String statut, Categorie categorie) {
+    public Article( String titre, String photo, String description, double prixvente,long quantiter, double prix, boolean livrable, String statut, Categorie categorie) {
         this.titre = titre;
         this.photo = photo;
         this.description = description;
@@ -46,15 +46,17 @@ public class Article {
         this.prix = prix;
         this.livrable = livrable;
         this.statut = statut;
+        this.prixvente = prixvente;
         this.categorie = categorie;
     }
 
-    public Article(String titre, String photo, String description, long quantiter, double prix, boolean livrable, String statut, Categorie categorie, Vendeur vendeur) {
+    public Article(String titre, String photo, String description, long quantiter, double prix, double prixvente, boolean livrable, String statut, Categorie categorie, Vendeur vendeur) {
         this.titre = titre;
         this.photo = photo;
         this.description = description;
         this.quantiter = quantiter;
         this.prix = prix;
+        this.prixvente = prixvente;
         this.livrable = livrable;
         this.statut = statut;
         this.categorie = categorie;

@@ -12,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,12 +37,27 @@ public class DemandeVendeurController {
             return new ResponseEntity<>("Une erreur s'est produite lors de la création de la demande de vendeur.", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    // Endpoint pour récupérer toutes les demandes vendeurs
     @GetMapping("/all")
     public ResponseEntity<List<DemandeVendeur>> getAllDemandeVendeurs() {
-        List<DemandeVendeur> demandeVendeurs = demandeVendeurService.getAllDemandeVendeurs();
-        return new ResponseEntity<>(demandeVendeurs, HttpStatus.OK);
+        try {
+            List<DemandeVendeur> demandeVendeurs = demandeVendeurService.getAllDemandeVendeurs();
+            return ResponseEntity.ok(demandeVendeurs);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
+ /* @GetMapping("/all")
+    public ResponseEntity<List<DemandeVendeur>> getAllDemandeVendeurs() {
+        try {
+            List<DemandeVendeur> demandeVendeurs = demandeVendeurService.getAllDemandeVendeurs();
+            return ResponseEntity.ok(demandeVendeurs);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }*/
+
 
     // Endpoint pour récupérer une demande vendeur par son ID
    /* @GetMapping("/getDemandeVendeurById/{id}")

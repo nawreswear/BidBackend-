@@ -5,6 +5,7 @@ import com.example.BidBackend.model.Part_En;
 import java.util.List;
 
 public interface Part_EnService {
+    Long getPartenIdByEnchere(Long enchereId);
     Part_En savePartEn(Part_En partEn);
     List<Part_En> getAllPartEns();
     Part_En getPartEnById(long id);

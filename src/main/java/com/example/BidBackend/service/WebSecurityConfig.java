@@ -24,7 +24,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         http.cors()
                 .and()
                 .authorizeRequests()
-                .antMatchers("/article/**", "/enchere/**", "/vendeur/**", "/categorie/**", "/parten/**", "/demandesvendeurs/**")
+                .antMatchers("/article/**","/article/updateIdEnchers/**","/enchere/**", "/enchere/UpdateEnchere/**", "/vendeur/**", "/categorie/**","/parten/**", "/demandesvendeurs/all/**","/articles/**","/demandesvendeurs/**")
                 .permitAll()
                 .and()
                 .csrf().disable();
@@ -49,7 +49,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         return new ObjectMapper().configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
     }
 
-    @Bean
+   /* @Bean
     public FilterRegistrationBean<CharacterEncodingFilter> characterEncodingFilter() {
         FilterRegistrationBean<CharacterEncodingFilter> filter = new FilterRegistrationBean<>();
         filter.setFilter(new CharacterEncodingFilter());
@@ -57,5 +57,5 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         filter.addInitParameter("forceEncoding", "true");
         filter.addUrlPatterns("/*");
         return filter;
-    }
+    }*/
 }
