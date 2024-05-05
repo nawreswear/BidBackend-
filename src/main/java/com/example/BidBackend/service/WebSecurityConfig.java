@@ -49,13 +49,4 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         return new ObjectMapper().configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
     }
 
-   /* @Bean
-    public FilterRegistrationBean<CharacterEncodingFilter> characterEncodingFilter() {
-        FilterRegistrationBean<CharacterEncodingFilter> filter = new FilterRegistrationBean<>();
-        filter.setFilter(new CharacterEncodingFilter());
-        filter.addInitParameter("encoding", "UTF-8");
-        filter.addInitParameter("forceEncoding", "true");
-        filter.addUrlPatterns("/*");
-        return filter;
-    }*/
 }
