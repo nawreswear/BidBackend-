@@ -21,11 +21,11 @@ public class Enchere extends BaseEntity {
     private Date dateDebut;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "enchere", cascade = CascadeType.PERSIST, fetch = FetchType.LAZY) // Changement ici
+    @OneToMany(mappedBy = "enchere", cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
     private List<Article> articles = new ArrayList<>();
 
 
-    @JsonIgnoreProperties({"enchere"}) // Ajouté pour éviter la récursivité infinie
+    @JsonIgnoreProperties({"enchere"})
     @OneToMany(mappedBy = "enchere", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Part_En> parten = new ArrayList<>();
 

@@ -165,7 +165,7 @@ public class Part_EnServiceImp implements Part_EnService {
         Optional<Part_En> optionalPartEn = partEnRepository.findById(partEn.getId());
         if (optionalPartEn.isPresent()) {
             Part_En existingPartEn = optionalPartEn.get();
-            existingPartEn.setEtat("gangnat");
+            existingPartEn.setEtat("gangnant");
             return partEnRepository.save(existingPartEn);
         } else {
             return null;
