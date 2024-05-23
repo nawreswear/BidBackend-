@@ -1,44 +1,33 @@
 package com.example.BidBackend.model;
 
 import com.fasterxml.jackson.annotation.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.hibernate.Hibernate;
+import lombok.*;
 
 import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 @Entity
 @Getter
 @Setter
 @AllArgsConstructor
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler","users"})
-public class Part_En {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@NoArgsConstructor
+@ToString
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "user"})
+public class Part_En extends BaseEntity {
 
-    @OneToMany(mappedBy = "parten", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private List<Enchere> encheres;
+    private String etat = " ";
+    private double prixproposer = 0.0;
 
-    @OneToMany(mappedBy = "parten", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<User> users;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "enchere_id", nullable = false)
+    @JsonIgnore
+    private Enchere enchere;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnoreProperties("partens")
+    private User user;
 
-    public Part_En() {
-        this.encheres = new ArrayList<>();
-        this.users = new ArrayList<>();
-    }
-    public List<User> getUsers() {
-        if (!Hibernate.isInitialized(users)) {
-            Hibernate.initialize(users);
-        }
-        return new ArrayList<>(users);
+    public void setUserId(Long userId) {
+
     }
 }

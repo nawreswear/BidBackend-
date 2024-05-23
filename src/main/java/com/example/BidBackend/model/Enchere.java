@@ -15,26 +15,26 @@ import java.util.List;
 @Setter
 @Entity
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Enchere {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Enchere extends BaseEntity {
 
     private Date dateFin;
     private Date dateDebut;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "enchere", cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "enchere", cascade = CascadeType.PERSIST, fetch = FetchType.LAZY) // Changement ici
     private List<Article> articles = new ArrayList<>();
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parten_id")
-    @JsonIgnoreProperties
-    private Part_En parten;
 
+    @JsonIgnoreProperties({"enchere"}) // Ajouté pour éviter la récursivité infinie
+    @OneToMany(mappedBy = "enchere", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<Part_En> parten = new ArrayList<>();
+
+    @JsonIgnoreProperties({"admin"})
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "admin_id")
     private Admin admin;
+
+    private String etat = "en cours";
 
     public Enchere() {
     }

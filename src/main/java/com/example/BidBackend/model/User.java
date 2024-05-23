@@ -2,7 +2,6 @@ package com.example.BidBackend.model;
 
 import com.fasterxml.jackson.annotation.*;
 import lombok.*;
-
 import javax.persistence.*;
 import javax.validation.constraints.*;
 import java.util.ArrayList;
@@ -11,12 +10,10 @@ import java.util.List;
 @Entity
 @Data
 @AllArgsConstructor
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler","demandes"})
+@NoArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "demandes"})
 @Inheritance(strategy = InheritanceType.JOINED)
-public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class User extends BaseEntity {
 
     @Size(max = 20)
     private String type;
@@ -59,16 +56,12 @@ public class User {
 
     private String photo;
 
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JoinColumn(name = "parten_id")
-    private Part_En parten ;
+    @JsonIgnore
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Part_En> partens = new ArrayList<>();
 
+    @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<DemandeVendeur> demandes;
-    public User() {
-    }
-    public User(int id) {
-        this.id = (long) id;
-    }
 
 }

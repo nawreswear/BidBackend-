@@ -47,11 +47,7 @@ public class DemandeVendeurServiceImp implements DemandeVendeurService{
     public List<DemandeVendeur> getAllDemandeVendeurs() {
         List<DemandeVendeur> demandeVendeurs = demandeVendeurRepository.findAll();
         demandeVendeurs.forEach(demandeVendeur -> {
-            Part_En parten = demandeVendeur.getUser().getParten();
-            if (parten != null) {
-                // Forcer l'initialisation des utilisateurs
-                parten.getUsers().size(); // Accéder à la taille pour initialiser la collection
-            }
+            Hibernate.initialize(demandeVendeur.getUser().getPartens());
         });
         return demandeVendeurs;
     }

@@ -1,5 +1,6 @@
 package com.example.BidBackend.service;
 
+import com.example.BidBackend.model.Part_En;
 import com.example.BidBackend.model.User;
 import com.example.BidBackend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.Collections;
 import java.util.Optional;
 
@@ -16,14 +18,20 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Transactional
     public Long getPartenIdByUserId(Long userId) {
+        // Récupérer l'utilisateur existant depuis la base de données
         User user = userRepository.findById(userId).orElse(null);
-        if (user != null && user.getParten() != null) {
-            return user.getParten().getId();
+        if (user != null && !user.getPartens().isEmpty()) {
+            // Récupérer le premier Part_En associé à l'utilisateur
+            Part_En partEn = user.getPartens().get(0);
+            return partEn.getId();
         } else {
             return null; // Ou renvoyer une valeur par défaut selon votre cas
         }
     }
+
     public User save(User user) {
         return userRepository.save(user);
     }
@@ -76,7 +84,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             existingUser.setCin(updatedUser.getCin());
             existingUser.setLongitude(updatedUser.getLongitude());
             existingUser.setLatitude(updatedUser.getLatitude());*/
-            existingUser.setParten(updatedUser.getParten());
+            existingUser.setPartens(updatedUser.getPartens());
             // Update the photo only if a new photo is provided
            /* if (updatedUser.getPhoto() != null && updatedUser.getPhoto().length() > 0) {
                 existingUser.setPhoto(updatedUser.getPhoto());

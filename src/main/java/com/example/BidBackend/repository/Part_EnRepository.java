@@ -12,8 +12,14 @@ import java.util.Optional;
 
 @Repository
 public interface Part_EnRepository extends JpaRepository<Part_En,Long> {
-   /* @Query("SELECT p FROM Part_En p LEFT JOIN FETCH p.encheres e LEFT JOIN FETCH p.users u WHERE p.id = :id")
-    Part_En findPart_EnWithAssociations(@Param("id") Long id);*/
-   @EntityGraph(attributePaths = "users")
+  /* @Query("SELECT p FROM Part_En p WHERE p.prixproposer = (SELECT MAX(p2.prixproposer) FROM Part_En p2)")
+   Part_En findTopPrixProposerParten();*/
+   @EntityGraph(attributePaths = "user")
    Optional<Part_En> findById(Long id);
+   @Query(value = "SELECT * FROM Part_En p WHERE p.enchere_id = :enchereId ORDER BY p.prixproposer DESC LIMIT 1", nativeQuery = true)
+   Part_En findTopPrixProposerPartenByEnchereId(@Param("enchereId") Long enchereId);
+   Part_En findTopByEnchereIdOrderByPrixproposerDesc(Long enchereId);
+    boolean existsByUser_IdAndEnchere_Id(Long userId, Long enchereId);
+
 }
+

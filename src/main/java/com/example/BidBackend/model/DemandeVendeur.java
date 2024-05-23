@@ -8,7 +8,7 @@ import java.util.Date;
 
 @Entity
 @Data
-@NoArgsConstructor//(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "demande_vendeur")
 public class DemandeVendeur {

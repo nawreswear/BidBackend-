@@ -7,6 +7,7 @@ import java.util.Optional;
 import com.example.BidBackend.model.*;
 import com.example.BidBackend.repository.EnchereRepository;
 import com.example.BidBackend.service.*;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,21 +39,25 @@ public class EnchereControlleur {
 		return new ResponseEntity<>(articles, HttpStatus.OK);
 	}
 	@PostMapping("/{userId}/participate/{enchereId}")
+	@Transactional
 	public ResponseEntity<Object> participateInEnchere(@PathVariable("userId") Long userId, @PathVariable("enchereId") Long enchereId) {
 		// Récupérer l'utilisateur depuis la base de données
 		User utilisateur = userService.findById(userId);
 		if (utilisateur == null) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Utilisateur non trouvé");
 		}
+
 		// Récupérer l'enchère depuis la base de données
 		Optional<Enchere> enchereOptional = enchereService.getEnchereById(enchereId);
-		if (!enchereOptional.isPresent()) {
+		if (enchereOptional.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Enchère non trouvée");
 		}
 		Enchere enchere = enchereOptional.get();
+
 		// Vérifier si l'utilisateur participe déjà à cette enchère
-		Part_En partEn = utilisateur.getParten();
-		if (partEn != null && partEn.getEncheres().contains(enchere)) {
+		boolean isAlreadyParticipating = enchere.getParten().stream()
+				.anyMatch(partEn -> partEn.getUser().getId().equals(userId));
+		if (isAlreadyParticipating) {
 			return ResponseEntity.status(HttpStatus.CONFLICT).body("L'utilisateur participe déjà à cette enchère");
 		}
 
@@ -83,7 +88,7 @@ public class EnchereControlleur {
 		// Récupérez la liste d'articles directement à partir de la requête
 		List<Article> existingArticles = request.getArticles();
 		// Récupérez l'utilisateur et l'administrateur à partir de la requête
-		Part_En partEn = request.getParten();
+		List<Part_En> partEnList = request.getParten();
 		Admin admin = request.getAdmin();
 		// Créez une nouvelle enchère à partir de la requête
 		Enchere enchere = new Enchere();
@@ -91,11 +96,10 @@ public class EnchereControlleur {
 		enchere.setDateFin(request.getDateFin());
 		enchere.setArticles(existingArticles);
 		enchere.setAdmin(admin);
-		enchere.setParten(partEn);
-		// Enregistrez l'enchère
 		Enchere savedEnchere = enchereService.save(enchere);
 		return ResponseEntity.ok(savedEnchere);
 	}
+
 	@PostMapping("/UpdateEnchere/{id}")
 	@Transactional
 	public ResponseEntity<Enchere> updateEnchere(@PathVariable Long id, @RequestBody Enchere updatedEnchere) {
@@ -111,44 +115,47 @@ public class EnchereControlleur {
 		}
 
 		// Récupérez l'enchère à mettre à jour depuis la base de données
-		Enchere existingEnchere = enchererepository.findByIdWithParten(id).orElse(null);
-		if (existingEnchere == null) {
+		Optional<Enchere> existingEnchereOptional = enchererepository.findByIdWithParten(id);
+		if (!existingEnchereOptional.isPresent()) {
 			return ResponseEntity.notFound().build();
 		}
-
-		// Charger les associations paresseuses nécessaires
-		existingEnchere.getParten().getUsers().size();
-		// Vous pouvez également charger d'autres associations si nécessaire
-
-		// Mettez à jour les champs de l'enchère existante avec les nouvelles données
+		Enchere existingEnchere = existingEnchereOptional.get();
+		existingEnchere.getParten().forEach(partEn -> partEn.getUser().getNom());
 		existingEnchere.setDateDebut(updatedEnchere.getDateDebut());
 		existingEnchere.setDateFin(updatedEnchere.getDateFin());
 		existingEnchere.setParten(updatedEnchere.getParten());
 		existingEnchere.setAdmin(updatedEnchere.getAdmin());
-		// Assurez-vous de mettre à jour d'autres champs si nécessaire
-		// Enregistrez les modifications dans la base de données
-		Enchere updatedEncheree = enchererepository.save(existingEnchere);
+		existingEnchere.setArticles(updatedEnchere.getArticles());
+		Enchere updatedEnchereEntity = enchererepository.save(existingEnchere);
 
-		return ResponseEntity.ok(updatedEncheree);
+		return ResponseEntity.ok(updatedEnchereEntity);
 	}
-	@DeleteMapping("/deleteEnchere/{id}")
+    @DeleteMapping("/deleteEnchere/{id}")
 	public Void deleteEnchere(@PathVariable long id)
 	{
 		return enchereService.deleteEnchere(id);
 	}
 	@GetMapping(value="/getallEncheress")
+	@Transactional
 	public List<Enchere> getallEncheress() {
 		return enchereService.getAllEncheres();
 
 	}
+	@GetMapping("/getAllEncheres")
+	@Transactional
+	public ResponseEntity<List<Enchere>> getAllEncheres() {
+		List<Enchere> encheres = enchereService.getAllEncheres();
 
-	@GetMapping(value="/getallEncheres")
-	public List<Enchere> getallEncheres() {
-		return enchereService.getAllEncheres();
+		// Charger explicitement la collection partens pour chaque Enchere
+		for (Enchere enchere : encheres) {
+			Hibernate.initialize(enchere.getAdmin().getPartens());
+		}
+
+		return new ResponseEntity<>(encheres, HttpStatus.OK);
 	}
-	 @GetMapping("/{id}")
+	@GetMapping("/{id}")
 	 public Optional<Enchere> getEnchereById(@PathVariable Long id) {
-	        return enchereService.getEnchereById(id);
+		return enchereService.getEnchereById(id);
 	    }
 
 

@@ -15,10 +15,6 @@ import java.util.List;
 @Entity
 @AllArgsConstructor
 public class Admin extends User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
 
     @JsonIgnore
     @OneToMany(mappedBy = "admin", cascade = CascadeType.ALL)

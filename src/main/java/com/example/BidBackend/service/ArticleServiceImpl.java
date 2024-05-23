@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityNotFoundException;
+import javax.transaction.Transactional;
 import java.util.*;
 
 @Service
@@ -28,53 +29,23 @@ public class ArticleServiceImpl implements ArticleService {
         return articleRepository.findByCategorie_Id(categoryId);
     }
     @Override
-    public void addPrixVenteForArticle(Long articleId, double prixvente, Article newArticle) {
-        // Rechercher l'article par son ID
-        Optional<Article> optionalArticle = articleRepository.findById(articleId);
-
-        optionalArticle.ifPresent(article -> {
-            // Comparer le nouveau prix de vente avec le prix actuel de l'article
-            if (prixvente > article.getPrixvente()) {
-                // Si le nouveau prix de vente est supérieur, mettre à jour le prix de vente de l'article
-                article.setPrixvente(prixvente);
-                articleRepository.save(article);
-            }
-            // Si le nouveau prix de vente n'est pas supérieur, ne rien faire
-        });
-    }
+    @Transactional
     public List<Article> getArticlesByEnchereId(Long enchereId) {
-        // Utilisez le repository pour récupérer les articles associés à l'enchère
         return articleRepository.findByEnchereId(enchereId);
     }
+
+    @Override
+    @Transactional
     public List<Article> getAllArticles() {
         return articleRepository.findAll();
     }
     @Override
-    public String updateArticlePriceByEnchereAndArticle(Long enchereId, Long articleId, double prixvente) {
-        // Recherchez l'enchère par ID
-        Enchere enchere = enchereRepository.findById(enchereId)
-                .orElseThrow(() -> new EntityNotFoundException("Enchère non trouvée"));
-
-        // Vérifiez si l'enchère est toujours en cours
-        Date now = new Date();
-        if (now.after(enchere.getDateFin())) {
-            throw new IllegalStateException("L'enchère est terminée, vous ne pouvez pas mettre à jour le prix de l'article.");
+    public Vendeur getVendeurByArticleId(Long articleId) {
+        Article article = articleRepository.findById(articleId).orElse(null);
+        if (article != null) {
+            return article.getVendeur();
         }
-
-        // Vérifiez si l'enchère est associée à l'article
-        Article article = enchere.getArticles().stream()
-                .filter(a -> a.getId().equals(articleId))
-                .findFirst()
-                .orElseThrow(() -> new EntityNotFoundException("Article non trouvé pour l'enchère"));
-
-        // Récupérez l'ID du Part_En associé à l'enchère
-        Long partenId = enchere.getParten().getId();
-
-        if (prixvente > article.getPrixvente()) {
-            article.setPrixvente(prixvente);
-            articleRepository.save(article);
-        }
-        return "Prix de l'article mis à jour avec succès. ID du Part_En associé : " + partenId;
+        return null;
     }
     public Optional<Article> getArticleById(Long id) {
         return articleRepository.findById(id);
@@ -123,7 +94,8 @@ public class ArticleServiceImpl implements ArticleService {
         // Enregistrez l'article avec la catégorie et le vendeur mis à jour
         return articleRepository.save(article);
     }
-
+    @Override
+@Transactional
     public Article updateArticle(Long id, Article newArticle) {
         return articleRepository.findById(id)
                 .map(article -> {
@@ -135,9 +107,15 @@ public class ArticleServiceImpl implements ArticleService {
                     article.setLivrable(newArticle.isLivrable());
                     article.setStatut(newArticle.getStatut());
                     article.setCategorie(newArticle.getCategorie());
-                    article.setEnchere(newArticle.getEnchere());
+
+                    // Conserver l'ancienne valeur de enchere si la nouvelle est nulle
+                    if (newArticle.getEnchere() != null) {
+                        article.setEnchere(newArticle.getEnchere());
+                    } else {
+                        article.setEnchere(article.getEnchere());
+                    }
+
                     article.setVendeur(newArticle.getVendeur());
-                    // Mettre à jour d'autres champs si nécessaire
                     return articleRepository.save(article);
                 })
                 .orElseGet(() -> {
@@ -145,6 +123,8 @@ public class ArticleServiceImpl implements ArticleService {
                     return articleRepository.save(newArticle);
                 });
     }
+
+
     public Article updateArticlee(Long id, Long enchereId) {
         Optional<Article> optionalArticle = articleRepository.findById(id);
         Optional<Enchere> optionalEnchere = enchereRepository.findById(enchereId);

@@ -24,7 +24,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         http.cors()
                 .and()
                 .authorizeRequests()
-                .antMatchers("/article/**","/article/updateIdEnchers/**","/enchere/**", "/enchere/UpdateEnchere/**", "/vendeur/**", "/categorie/**","/parten/**", "/demandesvendeurs/all/**","/articles/**","/demandesvendeurs/**")
+                .antMatchers("/article/**","/parten/userDetails/{userId}/**","/parten/{enchereId}/participation/{userId}/**","/article/{articleId}/vendeur/**","/article/updateIdEnchers/**","/enchere/**", "/enchere/UpdateEnchere/**", "/vendeur/**","/parten/{userId}/{enchereId}/**","/parten/topProposedPrice/{enchereId}/userDetails/**", "/categorie/**","/parten/**", "/demandesvendeurs/all/**","/articles/**","/demandesvendeurs/**")
                 .permitAll()
                 .and()
                 .csrf().disable();

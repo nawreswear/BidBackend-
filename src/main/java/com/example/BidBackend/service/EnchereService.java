@@ -9,9 +9,8 @@ import com.example.BidBackend.model.Enchere;
 public interface EnchereService {
 
 	Enchere save(Enchere commande);
-	Long getPartenIdByEnchere(Long enchereId);
 	Void deleteEnchere(Long id);
-
+	List<Long> getPartenIdsByEnchere(Long enchereId);
 	List<Enchere> getAllEncheres();
 	Enchere updateEnchere(Long id, Long adminId, Date dateDebut, Date dateFin, Long partenId);
 	Optional<Enchere> getEnchereById(Long id);

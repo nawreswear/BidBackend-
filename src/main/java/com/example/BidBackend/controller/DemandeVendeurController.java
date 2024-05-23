@@ -47,25 +47,6 @@ public class DemandeVendeurController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
- /* @GetMapping("/all")
-    public ResponseEntity<List<DemandeVendeur>> getAllDemandeVendeurs() {
-        try {
-            List<DemandeVendeur> demandeVendeurs = demandeVendeurService.getAllDemandeVendeurs();
-            return ResponseEntity.ok(demandeVendeurs);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }*/
-
-
-    // Endpoint pour récupérer une demande vendeur par son ID
-   /* @GetMapping("/getDemandeVendeurById/{id}")
-    public ResponseEntity<DemandeVendeur> getDemandeVendeurById(@PathVariable("id") Long id) {
-        Optional<DemandeVendeur> demandeVendeur = demandeVendeurService.getDemandeVendeurById(id);
-        return demandeVendeur.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }*/
     @PutMapping("/{id}/etat")
     public ResponseEntity<Void> updateDemandeEtat(@PathVariable("id") Long id,
                                                   @RequestParam("nouvelEtat") boolean nouvelEtat) {
@@ -88,18 +69,6 @@ public class DemandeVendeurController {
         demandeVendeurService.deleteDemandeVendeur(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
-    // Endpoint pour mettre à jour une demande vendeur
-  /*  @PutMapping("/{id}")
-    public ResponseEntity<DemandeVendeur> updateDemandeVendeur(@PathVariable("id") Long id,
-                                                               @RequestBody DemandeVendeur updatedDemandeVendeur) {
-        DemandeVendeur demandeVendeur = demandeVendeurService.updateDemandeVendeur(id, updatedDemandeVendeur);
-        if (demandeVendeur != null) {
-            return new ResponseEntity<>(demandeVendeur, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }*/
 
-    // Endpoint pour supprimer une demande vendeur par son ID
 
 }

@@ -36,8 +36,4 @@ public class VendeurControlleur {
         return vendeurserv.getAllVendeurs();
     }
 
-  /*  @GetMapping("/enchere/{enchereId}/vendeurs")
-    public List<Vendeur> getAllVendeursForEnchere(@PathVariable Long enchereId) {
-        return vendeurserv.getAllVendeursForEnchere(enchereId);
-    }*/
 }

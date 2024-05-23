@@ -6,23 +6,15 @@ import com.example.BidBackend.repository.UserRepository;
 import com.example.BidBackend.repository.VendeurRepository;
 import com.example.BidBackend.service.*;
 import org.hibernate.Hibernate;
-import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 
 import javax.transaction.Transactional;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import javax.persistence.EntityNotFoundException;
-import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/article")
@@ -36,6 +28,7 @@ public class ArticleController {
     private CategorieRepository categorieRepository;
     @Autowired
     EnchereService enchereService;
+    @Autowired
    ArticleRepository articleRepository;
     @Autowired
     UserDetailsServiceImpl userService;
@@ -48,30 +41,40 @@ public class ArticleController {
 
     @Autowired
     VendeurRepository vendeurRepository;
+    @Transactional
     @GetMapping("/getAll")
-    public ResponseEntity<List<Article>> getAllArticles() {
-        List<Article> articles = articleService.getAllArticles();
-        return ResponseEntity.ok(articles);
-    }
+    public List<Article> getAllArticles() {
+        List<Article> articles = articleRepository.findAll();
 
-    @PutMapping("/updateArticlePrice/{enchereId}/{articleId}")
-    public ResponseEntity<String> updateArticlePrice(@PathVariable Long enchereId,
-                                                     @PathVariable Long articleId,
-                                                     @RequestBody Map<String, Double> requestBody) {
-        Double prixvente = requestBody.get("prixvente");
-        if (prixvente == null) {
-            return ResponseEntity.badRequest().body("Le prix de vente n'a pas été fourni dans le corps de la requête.");
+        List<Article> articleDTOs = new ArrayList<>();
+        for (Article article : articles) {
+            // Initialize the collection of Enchere objects for the article
+            Hibernate.initialize(article.getEnchere());
+            // Convert Article to ArticleDTO
+            Article articleDTO = convertToDTO(article);
+            articleDTOs.add(articleDTO);
         }
 
-        try {
-            String response = articleService.updateArticlePriceByEnchereAndArticle(enchereId, articleId, prixvente);
-            return ResponseEntity.ok(response);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        return articleDTOs;
     }
+
+    private Article convertToDTO(Article article) {
+        Article articleDTO = new Article();
+        articleDTO.setId(article.getId());
+        articleDTO.setTitre(article.getTitre());
+        articleDTO.setPrix(article.getPrix());
+        articleDTO.setPhoto(article.getPhoto());
+        articleDTO.setCategorie(article.getCategorie());
+        articleDTO.setStatut(article.getStatut());
+        articleDTO.setQuantiter(article.getQuantiter());
+        articleDTO.setLivrable(article.isLivrable());
+        articleDTO.setVendeur(article.getVendeur());
+
+        articleDTO.setDescription(article.getDescription());
+        Hibernate.initialize(article.getEnchere());
+        return articleDTO;
+    }
+
     @PutMapping("/updateIdEnchers/{articleId}/{enchereId}")
     public ResponseEntity<Void> updateIdEnchers(@PathVariable Long articleId, @PathVariable Long enchereId) {
         try {
@@ -88,20 +91,7 @@ public class ArticleController {
         Article updatedArticle = articleService.updateArticlee(articleId, enchereId);
         return new ResponseEntity<>(updatedArticle, HttpStatus.OK);
     }
-    @PutMapping("/addPrixVenteForArticle/{articleId}/{prixvente}")
-    public ResponseEntity<String> addPrixVenteForArticle(
-            @PathVariable Long articleId,
-            @PathVariable double prixvente) {
 
-        // Créer un nouvel objet Article avec le nouveau prix de vente
-        Article newArticle = new Article();
-        newArticle.setPrixvente(prixvente);
-
-        // Appeler le service pour mettre à jour le prix de vente de l'article
-        articleService.addPrixVenteForArticle(articleId, prixvente, newArticle);
-
-        return ResponseEntity.ok("Prix de vente mis à jour avec succès pour l'article spécifié");
-    }
     @GetMapping("/{id}")
     public ResponseEntity<Article> getArticleById(@PathVariable Long id) {
         Article article = articleService.getArticleById(id)
@@ -117,18 +107,6 @@ public class ArticleController {
         Article createdArticle = articleService.createArticle(article);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdArticle);
     }
-   /*@PostMapping("/addArticlee/{userId}")
-    public Article createArticlee(@Valid @RequestBody Article article, @PathVariable("userId") Long userId) {
-        try {
-            Article newArticle = articleService.createArticlee(article, userId); // Remplacez "articleService" par le nom de votre service
-            return newArticle;
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mauvaise requête", e);
-        } catch (EntityNotFoundException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Ressource non trouvée", e);
-        }
-    }*/
-
     @PostMapping("/addArticlee/{vendeurId}")
     public ResponseEntity<Article> createArticlee(@RequestBody Article article, @PathVariable Long vendeurId) {
         // Vérifiez si l'ID du vendeur est null ou non valide
@@ -145,23 +123,33 @@ public class ArticleController {
         // Retournez la réponse avec l'article créé
         return ResponseEntity.ok().body(createdArticle);
     }
+    @Transactional
     @PutMapping("/UpdateArticle/{id}")
     public ResponseEntity<Article> updateArticle(@PathVariable Long id, @RequestBody Article newArticle) {
         Article updatedArticle = articleService.updateArticle(id, newArticle);
         return ResponseEntity.ok(updatedArticle);
     }
-
+    @GetMapping("/{articleId}/vendeur")
+    public ResponseEntity<Number> getVendeurByArticleId(@PathVariable Long articleId) {
+        Optional<Article> article = articleService.getArticleById(articleId);
+        if (article != null) {
+            // Si l'article est trouvé, cherchez le vendeur
+            User vendeur = article.get().getVendeur();
+            if (vendeur != null) {
+                // Si le vendeur est trouvé, retournez son nom
+                return ResponseEntity.ok(vendeur.getId());
+            } else {
+                // Si le vendeur n'est pas trouvé, retournez un message approprié
+                return ResponseEntity.ok(0); // Ou retournez un statut 404 avec un message approprié
+            }
+        } else {
+            // Si l'article n'est pas trouvé, retournez un message approprié
+            return ResponseEntity.ok(-1);
+        }
+    }
     @DeleteMapping("/deleteArticle/{id}")
     public ResponseEntity<Void> deleteArticle(@PathVariable Long id) {
         articleService.deleteArticle(id);
         return ResponseEntity.noContent().build();
     }
-   /* @GetMapping("/category/{id}")
-    public List<Article> getArticlesByCategory(@PathVariable Long id) {
-        // Vous devez d'abord obtenir la catégorie à partir de l'ID
-        // puis appeler le service pour récupérer les articles de cette catégorie
-        // Voici un exemple de façon de le faire:
-        Categorie categorie = // Récupérez la catégorie à partir de l'ID (vous devez avoir un service pour cela)
-        return articleService.getArticlesByCategory(categorie);
-    }*/
 }

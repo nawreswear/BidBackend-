@@ -1,6 +1,7 @@
 package com.example.BidBackend.service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import com.example.BidBackend.model.*;
 import com.example.BidBackend.repository.*;
@@ -29,17 +30,24 @@ public class EnchereServiceImp implements EnchereService {
 
 	@Autowired
 	private Part_EnRepository participationEnchereRepository;
-	@Override
-	public Long getPartenIdByEnchere(Long enchereId) {
+    @Override
+	public List<Long> getPartenIdsByEnchere(Long enchereId) {
 		// Recherchez l'enchère par ID
 		Enchere enchere = enchereRepository.findById(enchereId)
 				.orElseThrow(() -> new EntityNotFoundException("Enchère non trouvée"));
 
-		// Récupérez l'ID du Part_En associé à l'enchère
-		Long partenId = enchere.getParten().getId();
+		// Récupérez la liste des Part_En associés à l'enchère
+		List<Part_En> partens = enchere.getParten();
 
-		return partenId;
+		// Récupérez les IDs des Part_En
+		List<Long> partenIds = partens.stream()
+				.map(Part_En::getId)
+				.collect(Collectors.toList());
+
+		return partenIds;
 	}
+
+
 	@Override
 	@Transactional
 	public String participerEnchere(Long userId, Long enchereId) {
@@ -55,24 +63,28 @@ public class EnchereServiceImp implements EnchereService {
 			return "Enchère non trouvée";
 		}
 
-		// Créer une nouvelle Part_En si nécessaire et associer l'utilisateur à l'enchère
-		Part_En partEn = utilisateur.getParten();
-		if (partEn == null) {
-			partEn = new Part_En();
-			partEn.setUsers(new ArrayList<>());
-			utilisateur.setParten(partEn);
+		// Vérifier si l'utilisateur participe déjà à cette enchère
+		boolean isAlreadyParticipating = enchere.getParten().stream()
+				.anyMatch(partEn -> partEn.getUser().getId().equals(userId));
+		if (isAlreadyParticipating) {
+			return "L'utilisateur participe déjà à cette enchère";
 		}
 
-		// Ajouter l'utilisateur à la liste des participants
-		partEn.getUsers().add(utilisateur);
+		// Créer une nouvelle instance de Part_En et associer l'utilisateur et l'enchère
+		Part_En partEn = new Part_En();
+		partEn.setUser(utilisateur);
+		partEn.setEnchere(enchere);
 
-		// Ajouter l'enchère à la liste des enchères auxquelles l'utilisateur participe
-		partEn.getEncheres().add(enchere);
+		// Ajouter la nouvelle participation à l'utilisateur et à l'enchère
+		utilisateur.getPartens().add(partEn);
+		enchere.getParten().add(partEn);
 
 		// Sauvegarder les modifications dans la base de données
-		userRepository.save(utilisateur);
+		partEnRepository.save(partEn); // Enregistrez d'abord la nouvelle participation
+		userRepository.save(utilisateur); // Ensuite, enregistrez l'utilisateur
+		enchereRepository.save(enchere); // Et enfin, enregistrez l'enchère
 
-		return "Utilisateur participé avec succès à l'enchère spécifique";
+		return "Utilisateur a participé avec succès à l'enchère spécifique";
 	}
 
 
@@ -103,12 +115,9 @@ public class EnchereServiceImp implements EnchereService {
 	@Override
 	@Transactional
 	public List<Enchere> getAllEncheres() {
-		List<Enchere> encheres = enchereRepository.findAllWithParten(); // Assurez-vous que cette méthode charge également les partenaires avec leurs utilisateurs
-		for (Enchere enchere : encheres) {
-			enchere.getParten().getUsers().size(); // Charger explicitement les utilisateurs associés à chaque partenaire
-		}
-		return encheres;
+		return enchereRepository.findAllWithParten();
 	}
+
 	@Override
 	public List<Enchere> getAllEncheresWithArticles() {
 		List<Enchere> enchereList = enchereRepository.findAll();
@@ -138,8 +147,7 @@ public class EnchereServiceImp implements EnchereService {
 		existingEnchere.setAdmin(admin);
 		existingEnchere.setDateDebut(dateDebut);
 		existingEnchere.setDateFin(dateFin);
-		existingEnchere.setParten(parten);
-
+		//existingEnchere.set(parten);
 		// Enregistrer les modifications dans la base de données
 		Enchere updatedEnchere = enchereRepository.save(existingEnchere);
 
